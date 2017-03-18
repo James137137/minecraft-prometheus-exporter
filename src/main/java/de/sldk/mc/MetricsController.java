@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import org.bukkit.Chunk;
 
 public class MetricsController extends AbstractHandler {
 
@@ -24,6 +25,7 @@ public class MetricsController extends AbstractHandler {
     private Gauge loadedChunks = Gauge.build().name("mc_loaded_chunks_total").help("Chunks loaded per world").labelNames("world").create().register();
     private Gauge playersOnline = Gauge.build().name("mc_players_online_total").help("Players currently online per world").labelNames("world").create().register();
     private Gauge entities = Gauge.build().name("mc_entities_total").help("Entities loaded per world").labelNames("world").create().register();
+    private Gauge tileEntities = Gauge.build().name("mc_tile_entities_total").help("Entities loaded per world").labelNames("world").create().register();
     private Gauge livingEntities = Gauge.build().name("mc_living_entities_total").help("Living entities loaded per world").labelNames("world").create().register();
     private Gauge memory = Gauge.build().name("mc_jvm_memory").help("JVM memory usage").labelNames("type").create().register();
 
@@ -54,8 +56,14 @@ public class MetricsController extends AbstractHandler {
                     playersOnline.labels(world.getName()).set(world.getPlayers().size());
                     entities.labels(world.getName()).set(world.getEntities().size());
                     livingEntities.labels(world.getName()).set(world.getLivingEntities().size());
+                    
+                    int tileEntitiesI = 0;
+                    for (Chunk chunk : world.getLoadedChunks()) {
+                        tileEntitiesI += chunk.getTileEntities().length;
+                    }
+                    tileEntities.labels(world.getName()).set(tileEntitiesI);
                 }
-              
+
                 tps.labels("tps").set(Lag.getTPS());
                 memory.labels("max").set(Runtime.getRuntime().maxMemory());
                 memory.labels("free").set(Runtime.getRuntime().freeMemory());
